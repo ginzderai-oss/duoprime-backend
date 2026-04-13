@@ -1,19 +1,19 @@
 const express = require('express');
 const cors = require('cors');
- 
+
 const app = express();
 app.use(cors());
 app.use(express.json());
- 
+
 const RIOT_KEY = process.env.RIOT_API_KEY || '';
 const PLATFORM = 'la2';
 const MASS = 'americas';
- 
+
 const PLAYERS = [
   { name: 'SALCHIPRIME', tag: 'AURA', color: '#C89B3C', id: 'salchi' },
   { name: 'CHORIPRIME',  tag: 'AURA', color: '#7B6EE8', id: 'chori'  },
 ];
- 
+
 async function riotFetch(url) {
   console.log('Fetching:', url);
   const res = await fetch(url, { headers: { 'X-Riot-Token': RIOT_KEY } });
@@ -24,35 +24,32 @@ async function riotFetch(url) {
   }
   return res.json();
 }
- 
+
 let cache = null;
 let cacheTime = 0;
 const CACHE_TTL = 5 * 60 * 1000;
- 
+
 app.get('/api/duo', async (req, res) => {
   try {
     if (cache && Date.now() - cacheTime < CACHE_TTL) {
       return res.json({ ...cache, cached: true, cacheAge: Math.round((Date.now() - cacheTime) / 1000) });
     }
- 
+
     const results = [];
- 
+
     for (const player of PLAYERS) {
       const account = await riotFetch(
         'https://' + MASS + '.api.riotgames.com/riot/account/v1/accounts/by-riot-id/' + encodeURIComponent(player.name) + '/' + encodeURIComponent(player.tag)
       );
- 
-      
-      );
- 
+
       const ranked = await riotFetch(
         'https://' + PLATFORM + '.api.riotgames.com/lol/league/v4/entries/by-puuid/' + account.puuid
       );
- 
+
       const matchIds = await riotFetch(
         'https://' + MASS + '.api.riotgames.com/lol/match/v5/matches/by-puuid/' + account.puuid + '/ids?queue=420&type=ranked&count=20'
       );
- 
+
       const matches = [];
       for (const mid of matchIds.slice(0, 15)) {
         try {
@@ -62,13 +59,13 @@ app.get('/api/duo', async (req, res) => {
           console.log('Error cargando partida', mid, e.message);
         }
       }
- 
+
       const solo = ranked.find(e => e.queueType === 'RANKED_SOLO_5x5') || null;
- 
+
       let kills=0, deaths=0, assists=0, dmg=0, cs=0, vision=0, kp=0, kpG=0, wins=0, losses=0;
       const champs = {};
       const history = [];
- 
+
       for (const m of matches) {
         const p = m.info.participants.find(x => x.puuid === account.puuid);
         if (!p) continue;
@@ -93,7 +90,7 @@ app.get('/api/duo', async (req, res) => {
           kp: tk > 0 ? Math.round((p.kills + p.assists) / tk * 100) : 0,
         });
       }
- 
+
       const g = wins + losses;
       results.push({
         id: player.id,
@@ -101,7 +98,7 @@ app.get('/api/duo', async (req, res) => {
         tag: player.tag,
         color: player.color,
         puuid: account.puuid,
-        level: 0
+        level: 0,
         ranked: solo ? {
           tier: solo.tier, rank: solo.rank, lp: solo.leaguePoints,
           wins: solo.wins, losses: solo.losses,
@@ -123,11 +120,11 @@ app.get('/api/duo', async (req, res) => {
         matchIds,
       });
     }
- 
+
     const mids1 = new Set(results[0].matchIds);
     const mids2 = new Set(results[1].matchIds);
     const sharedIds = [...mids1].filter(id => mids2.has(id));
- 
+
     let duoWins = 0;
     const duoHistory = [];
     for (const m of results[0].history) {
@@ -136,7 +133,7 @@ app.get('/api/duo', async (req, res) => {
       const p2hist = results[1].history.find(h => h.matchId === m.matchId);
       duoHistory.push({ ...m, p2: p2hist });
     }
- 
+
     const duo = {
       games: sharedIds.length,
       wins: duoWins,
@@ -144,24 +141,23 @@ app.get('/api/duo', async (req, res) => {
       wr: sharedIds.length ? Math.round(duoWins / sharedIds.length * 100) : 0,
       history: duoHistory.sort((a, b) => b.date - a.date).slice(0, 15),
     };
- 
+
     cache = {
       players: results.map(r => { const { matchIds, ...rest } = r; return rest; }),
       duo,
       updatedAt: Date.now()
     };
     cacheTime = Date.now();
- 
+
     res.json({ ...cache, cached: false });
- 
+
   } catch(e) {
     console.log('Error general:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
- 
+
 app.get('/health', (_, res) => res.json({ ok: true, key: RIOT_KEY ? 'presente' : 'FALTA' }));
- 
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log('Duo Prime API corriendo en :' + PORT));
- 
