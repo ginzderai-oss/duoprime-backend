@@ -47,7 +47,7 @@ app.get('/api/duo', async (req, res) => {
       );
  
       const ranked = await riotFetch(
-        'https://' + PLATFORM + '.api.riotgames.com/lol/league/v4/entries/by-summoner/' + summoner.id
+        'https://' + PLATFORM + '.api.riotgames.com/lol/league/v4/entries/by-puuid/' + account.puuid
       );
  
       const matchIds = await riotFetch(
