@@ -15,9 +15,15 @@ const PLAYERS = [
 ];
 
 async function riotFetch(url) {
+  console.log('Fetching:', url);
   const res = await fetch(url, { headers: { 'X-Riot-Token': RIOT_KEY } });
-  if (!res.ok) throw new Error(`Riot API ${res.status}: ${await res.text()}`);
+  if (!res.ok) {
+    const txt = await res.text();
+    console.log('Error en:', url, res.status, txt);
+    throw new Error(`Riot API ${res.status} en ${url}: ${txt}`);
+  }
   return res.json();
+}
 }
 
 let cache = null;
