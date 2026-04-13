@@ -13,7 +13,6 @@ const PLAYERS = [
   { name: 'SALCHIPRIME', tag: 'AURA', color: '#C89B3C', id: 'salchi' },
   { name: 'CHORIPRIME',  tag: 'AURA', color: '#7B6EE8', id: 'chori'  },
 ];
-
 async function riotFetch(url) {
   console.log('Fetching:', url);
   const res = await fetch(url, { headers: { 'X-Riot-Token': RIOT_KEY } });
