@@ -101,7 +101,7 @@ app.get('/api/duo', async (req, res) => {
         tag: player.tag,
         color: player.color,
         puuid: account.puuid,
-        level: summoner.summonerLevel,
+        level: 0
         ranked: solo ? {
           tier: solo.tier, rank: solo.rank, lp: solo.leaguePoints,
           wins: solo.wins, losses: solo.losses,
