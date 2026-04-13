@@ -6,7 +6,7 @@ app.use(cors());
 app.use(express.json());
 
 const RIOT_KEY = process.env.RIOT_API_KEY || '';
-const PLATFORM = 'la1';
+const PLATFORM = 'la2';
 const MASS = 'americas';
 
 const PLAYERS = [
