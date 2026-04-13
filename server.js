@@ -42,8 +42,7 @@ app.get('/api/duo', async (req, res) => {
         'https://' + MASS + '.api.riotgames.com/riot/account/v1/accounts/by-riot-id/' + encodeURIComponent(player.name) + '/' + encodeURIComponent(player.tag)
       );
  
-      const summoner = await riotFetch(
-        'https://' + PLATFORM + '.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/' + account.puuid
+      
       );
  
       const ranked = await riotFetch(
